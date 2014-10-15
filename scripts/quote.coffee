@@ -2,22 +2,29 @@
 #   Remember messages and quote them back
 #
 # Dependencies:
-#   underscore
-#   natural
+#   "underscore": "~1.7.0"
+#   "natural": "~0.1.28"
+#
+# Configuration:
+#   HUBOT_QUOTE_CACHE_SIZE=N - cache the last N messages for each user (default 25)
+#   HUBOT_QUOTE_STORE_SIZE=N - remember at most N messages for each user (default 100)
 #
 # Commands:
 #   hubot remember <user> <text> - remember most recent message from <user> containing <text>
 #   hubot quote <user> <text> - quote a random remembered message from <user> containing <text>
 #   hubot forget <user> <text> - forget most recent remembered message from <user> containing <text>
 #   hubot quotemash <text> - quote some random remembered messages containing <text>
+#
+# Author:
+#   b3nj4m
 
 _ = require 'underscore'
 natural = require 'natural'
 
 stemmer = natural.PorterStemmer
 
-CACHE_SIZE = 25
-STORE_SIZE = 100
+CACHE_SIZE = process.env.HUBOT_QUOTE_CACHE_SIZE ? parseInt(process.env.HUBOT_QUOTE_CACHE_SIZE) : 25
+STORE_SIZE = process.env.HUBOT_QUOTE_STORE_SIZE ? parseInt(process.env.HUBOT_QUOTE_STORE_SIZE) : 100
 
 uniqueStems = (text) ->
   return _.unique(stemmer.tokenizeAndStem(text))
