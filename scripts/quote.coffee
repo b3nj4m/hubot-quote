@@ -1,17 +1,23 @@
 # Description:
-#   Remember messages
+#   Remember messages and quote them back
 #
 # Commands:
-#   hubot remember <user> <text> - remember a recent message from <user> containing <text>
-#   hubot quote <user> <text> - quote a remembered message from <user> containing <text>
-#   hubot forget <user> <text> - forget a remembered message from <user> containing <text>
-#   hubot quotemash <text> - quote some remembered messages containing <text>
+#   hubot remember <user> <text> - remember most recent message from <user> containing <text>
+#   hubot quote <user> <text> - quote a random remembered message from <user> containing <text>
+#   hubot forget <user> <text> - forget most recent remembered message from <user> containing <text>
+#   hubot quotemash <text> - quote some random remembered messages containing <text>
 
 Util = require 'util'
 _ = require 'underscore'
+natural = require 'natural'
+
+stemmer = natural.PorterStemmer
 
 CACHE_SIZE = 25
 STORE_SIZE = 100
+
+uniqueStems = (text) ->
+  return _.unique(stemmer.tokenizeAndStem(text))
 
 module.exports = (robot) ->
   robot.brain.setAutoSave(true)
@@ -27,10 +33,11 @@ module.exports = (robot) ->
     username = msg.match[1]
     text = msg.match[2]
 
+    stems = uniqueStems(text)
+
     messageCache = robot.brain.get('quoteMessageCache')
     messageStore = robot.brain.get('quoteMessageStore')
 
-    console.log(robot)
     #TODO search for users in messageStore in case they've been removed? (name change implications?)
     users = robot.brain.usersForFuzzyName(username)
 
@@ -43,7 +50,9 @@ module.exports = (robot) ->
         messageIdx = null
         message = _.find messageCache[user.id], (msg, idx) ->
           messageIdx = idx
-          return msg.text.indexOf(text) isnt -1
+          #cache stems on message
+          msg.stems = msg.stems or uniqueStems(msg.text)
+          return _.intersection(stems, msg.stems).length is stems.length
 
         if message
           messageStore[user.id] = messageStore[user.id] or []
@@ -100,6 +109,8 @@ module.exports = (robot) ->
     username = msg.match[1]
     text = msg.match[2]
 
+    stems = uniqueStems(text)
+
     messageStore = robot.brain.get('quoteMessageStore')
 
     users = robot.brain.usersForFuzzyName(username)
@@ -111,32 +122,36 @@ module.exports = (robot) ->
         return false
       else
         messages = _.filter messageStore[user.id], (msg) ->
-          return msg.text.indexOf(text) isnt -1
+          #require all words to be present
+          #TODO more permissive search?
+          return _.intersection(stems, msg.stems).length is stems.length
 
-        if messages
+        if messages and messages.length > 0
           message = messages[_.random(messages.length - 1)]
           msg.send(messageToString(message))
 
-        return messages
+        return messages and messages.length > 0
 
     if users.length is 0
       msg.send("#{username} not found")
-    else if not messages
+    else if not messages or messages.length is 0
       msg.send("#{text} not found")
 
   robot.respond /quotemash (.*)/i, (msg) ->
     text = msg.match[1]
     limit = 10
 
+    stems = uniqueStems(text)
+
     messageStore = robot.brain.get('quoteMessageStore')
 
     matches = _.flatten _.map messageStore, (messages) ->
       return _.filter messages, (msg) ->
-        return msg.text.indexOf(text) isnt -1
+        return _.intersection(stems, msg.stems).length is stems.length
 
     messages = []
 
-    if matches
+    if matches and matches.length > 0
       while messages.length < limit and matches.length > 0
         messages.push(matches.splice(_.random(matches.length - 1), 1)[0])
 
@@ -156,7 +171,10 @@ module.exports = (robot) ->
         messageCache[userId].pop()
 
       #TODO configurable cache size
-      messageCache[userId].unshift({text: msg.message.text, user: msg.message.user})
+      messageCache[userId].unshift({
+        text: msg.message.text,
+        user: msg.message.user
+      })
 
       robot.brain.set('quoteMessageCache', messageCache)
 
