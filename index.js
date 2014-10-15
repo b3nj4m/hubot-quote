@@ -6,7 +6,6 @@ module.exports = function(robot) {
   fs.exists(path, function(exists) {
     if (exists) {
       fs.readdirSync(path).forEach(function(file) {
-        console.log(path, file);
         robot.loadFile(path, file);
         robot.parseHelp(Path.join(path, file));
       });

@@ -11,9 +11,9 @@
 //
 // Commands:
 //   hubot remember <user> <text> - remember most recent message from <user> containing <text>
-//   hubot quote <user> <text> - quote a random remembered message from <user> containing <text>
 //   hubot forget <user> <text> - forget most recent remembered message from <user> containing <text>
-//   hubot quotemash <text> - quote some random remembered messages containing <text>
+//   hubot quote <user> [<text>] - quote a random remembered message from <user> containing <text>
+//   hubot quotemash [<text>] - quote some random remembered messages containing <text>
 //
 // Author:
 //   b3nj4m
@@ -71,6 +71,62 @@ function robotRetrieve(robot, key) {
   return deserialize(robot.brain.get(key));
 }
 
+function stemMatches(searchStems, msg) {
+  //cache stems on message
+  msg.stems = msg.stems || uniqueStems(msg.text);
+  //require all stems to be present
+  return _.intersection(searchStems, msg.stems).length === searchStems.length;
+}
+
+function findAllStemMatches(messageTable, text, users) {
+  var stems = uniqueStems(text);
+  var userIds = users ? _.pluck(users, 'id') : _.keys(messageTable);
+
+  return _.flatten(_.map(userIds, function(userId) {
+    if (messageTable[userId] === undefined) {
+      return [];
+    }
+    else {
+      return _.filter(messageTable[userId], stemMatches.bind(this, stems));
+    }
+  }));
+}
+
+function findFirstStemMatch(messageTable, text, users) {
+  var userIds = users ? _.pluck(users, 'id') : _.keys(messageTable);
+  var message = null;
+  var messageIdx = null;
+  var userId = null;
+
+  var stems = uniqueStems(text);
+
+  _.find(userIds, function(usrId) {
+    userId = usrId;
+
+    if (messageTable[userId] === undefined) {
+      return false;
+    }
+    else {
+      message = _.find(messageTable[userId], function(msg, idx) {
+        messageIdx = idx;
+        return stemMatches(stems, msg);
+      });
+
+      return !!message;
+    }
+  });
+
+  if (message) {
+    return {
+      message: message,
+      messageIdx: messageIdx,
+      userId: userId
+    };
+  }
+
+  return null;
+}
+
 module.exports = function(robot) {
   var store = robotStore.bind(this, robot);
   var retrieve = robotRetrieve.bind(this, robot);
@@ -93,50 +149,30 @@ module.exports = function(robot) {
     var username = msg.match[1];
     var text = msg.match[2];
 
-    var stems = uniqueStems(text);
-
     var messageCache = retrieve('quoteMessageCache');
     var messageStore = retrieve('quoteMessageStore');
 
     //TODO search for users in messageStore in case they've been removed? (name change implications?)
     var users = robot.brain.usersForFuzzyName(username);
 
-    var message = null;
-    var messageIdx = null;
+    var match = findFirstStemMatch(messageCache, text, users);
 
-    _.find(users, function(user) {
-      if (messageCache[user.id] === undefined) {
-        return false;
-      }
-      else {
-        message = _.find(messageCache[user.id], function(msg, idx) {
-          messageIdx = idx;
-          //cache stems on message
-          msg.stems = msg.stems || uniqueStems(msg.text);
-          return _.intersection(stems, msg.stems).length === stems.length;
-        });
+    if (match) {
+      messageStore[match.userId] = messageStore[match.userId] || [];
+      messageStore[match.userId].unshift(match.message);
 
-        if (message) {
-          messageStore[user.id] = messageStore[user.id] || [];
-          messageStore[user.id].unshift(message);
+      messageCache[match.userId].splice(match.messageIdx, 1);
 
-          messageCache[user.id].splice(messageIdx, 1);
+      store('quoteMessageStore', messageStore);
+      store('quoteMessageCache', messageCache);
 
-          store('quoteMessageStore', messageStore);
-          store('quoteMessageCache', messageCache);
-
-          //TODO configurable responses
-          msg.send("remembering " + messageToString(message));
-        }
-
-        return !!message;
-      }
-    });
-
-    if (users.length === 0) {
+      //TODO configurable responses
+      msg.send("remembering " + messageToString(match.message));
+    }
+    else if (users.length === 0) {
       msg.send(notFoundMessage(username));
     }
-    else if (!message) {
+    else {
       msg.send(notFoundMessage(text));
     }
   });
@@ -149,91 +185,50 @@ module.exports = function(robot) {
 
     var users = robot.brain.usersForFuzzyName(username);
 
-    var message = null;
-    var messageIdx = null;
+    var match = findFirstStemMatch(messageStore, text, users);
 
-    _.find(users, function(user) {
-      if (messageStore[user.id] === undefined) {
-        return false;
-      }
-      else {
-        message = _.find(messageStore[user.id], function(msg, idx) {
-          messageIdx = idx;
-          return msg.text.indexOf(text) !== -1;
-        });
-        
-        if (message) {
-          messageStore[user.id].splice(messageIdx, 1);
-          store('quoteMessageStore', messageStore);
-          //TODO message object with toString
-          msg.send("forgot " + messageToString(message));
-        }
-
-        return message;
-      }
-    });
-
-    if (users.length === 0) {
+    if (match) {
+      messageStore[match.userId].splice(match.messageIdx, 1);
+      store('quoteMessageStore', messageStore);
+      msg.send("forgot " + messageToString(match.message));
+    }
+    else if (users.length === 0) {
       msg.send(notFoundMessage(username));
     }
-    else if (!message) {
+    else {
       msg.send(notFoundMessage(text));
     }
   });
 
-  robot.respond(/quote (\w*) (.*)/i, function(msg) {
+  robot.respond(/quote (\w*)( (.*))?/i, function(msg) {
     var username = msg.match[1];
-    var text = msg.match[2];
-
-    var stems = uniqueStems(text);
+    var text = msg.match[3] || '';
 
     var messageStore = retrieve('quoteMessageStore');
 
     var users = robot.brain.usersForFuzzyName(username);
 
-    var messages = null;
+    var matches = findAllStemMatches(messageStore, text, users);
 
-    _.find(users, function(user) {
-      if (messageStore[user.id] === undefined) {
-        return false;
-      }
-      else {
-        messages = _.filter(messageStore[user.id], function(msg) {
-          //require all words to be present
-          //TODO more permissive search?
-          return _.intersection(stems, msg.stems).length === stems.length;
-        });
-
-        if (messages && messages.length > 0) {
-          message = messages[_.random(messages.length - 1)];
-          msg.send(messageToString(message));
-        }
-
-        return messages && messages.length > 0
-      }
-    });
-
-    if (users.length === 0) {
+    if (matches && matches.length > 0) {
+      message = matches[_.random(matches.length - 1)];
+      msg.send(messageToString(message));
+    }
+    else if (users.length === 0) {
       msg.send(notFoundMessage(username));
     }
-    else if (!messages || messages.length === 0) {
+    else {
       msg.send(notFoundMessage(text));
     }
   });
 
-  robot.respond(/quotemash (.*)/i, function(msg) {
-    var text = msg.match[1]
-    var limit = 10
+  robot.respond(/quotemash( (.*))?/i, function(msg) {
+    var text = msg.match[2] || '';
+    var limit = 10;
 
-    var stems = uniqueStems(text)
+    var messageStore = retrieve('quoteMessageStore');
 
-    var messageStore = retrieve('quoteMessageStore')
-
-    var matches = _.flatten(_.map(messageStore, function(messages) {
-      return _.filter(messages, function(msg) {
-        return _.intersection(stems, msg.stems).length === stems.length;
-      });
-    }));
+    var matches = findAllStemMatches(messageStore, text);
 
     var messages = [];
 
