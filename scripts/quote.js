@@ -1,24 +1,22 @@
-/**
- * Description:
- *   Remember messages and quote them back
- *
- * Dependencies:
- *   "underscore": "~1.7.0"
- *   "natural": "~0.1.28"
- *
- * Configuration:
- *   HUBOT_QUOTE_CACHE_SIZE=N - cache the last N messages for each user (default 25)
- *   HUBOT_QUOTE_STORE_SIZE=N - remember at most N messages for each user (default 100)
- *
- * Commands:
- *   hubot remember <user> <text> - remember most recent message from <user> containing <text>
- *   hubot quote <user> <text> - quote a random remembered message from <user> containing <text>
- *   hubot forget <user> <text> - forget most recent remembered message from <user> containing <text>
- *   hubot quotemash <text> - quote some random remembered messages containing <text>
- *
- * Author:
- *   b3nj4m
- */
+// Description:
+//   Remember messages and quote them back
+//
+// Dependencies:
+//   "underscore": "~1.7.0"
+//   "natural": "~0.1.28"
+//
+// Configuration:
+//   HUBOT_QUOTE_CACHE_SIZE=N - cache the last N messages for each user (default 25)
+//   HUBOT_QUOTE_STORE_SIZE=N - remember at most N messages for each user (default 100)
+//
+// Commands:
+//   hubot remember <user> <text> - remember most recent message from <user> containing <text>
+//   hubot quote <user> <text> - quote a random remembered message from <user> containing <text>
+//   hubot forget <user> <text> - forget most recent remembered message from <user> containing <text>
+//   hubot quotemash <text> - quote some random remembered messages containing <text>
+//
+// Author:
+//   b3nj4m
 
 var _ = require('underscore');
 var natural = require('natural');
@@ -33,9 +31,14 @@ function uniqueStems(text) {
 }
 
 var messageTmpl = _.template('<%- user.name %>: <%- text %>');
+var notFoundTmpl = _.template('"<%- text %>" not found');
 
 function messageToString(message) {
   return messageTmpl(message);
+}
+
+function notFoundMessage(text) {
+  return notFoundTmpl({text: text});
 }
 
 function serialize(data) {
@@ -131,10 +134,10 @@ module.exports = function(robot) {
     });
 
     if (users.length === 0) {
-      msg.send("#{username} not found");
+      msg.send(notFoundMessage(username));
     }
     else if (!message) {
-      msg.send("#{text} not found");
+      msg.send(notFoundMessage(text));
     }
   });
 
@@ -171,10 +174,10 @@ module.exports = function(robot) {
     });
 
     if (users.length === 0) {
-      msg.send("#{username} not found");
+      msg.send(notFoundMessage(username));
     }
     else if (!message) {
-      msg.send("#{text} not found");
+      msg.send(notFoundMessage(text));
     }
   });
 
@@ -211,10 +214,10 @@ module.exports = function(robot) {
     });
 
     if (users.length === 0) {
-      msg.send("#{username} not found");
+      msg.send(notFoundMessage(username));
     }
     else if (!messages || messages.length === 0) {
-      msg.send("#{text} not found");
+      msg.send(notFoundMessage(text));
     }
   });
 
@@ -242,7 +245,7 @@ module.exports = function(robot) {
       msg.send.apply(msg, _.map(messages, messageToString));
     }
     else {
-      msg.send("#{text} not found");
+      msg.send(notFoundMessage(text));
     }
   });
 
