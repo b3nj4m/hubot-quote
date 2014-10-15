@@ -1,0 +1,21 @@
+{
+  "name": "hubot-quote",
+  "version": "0.0.0",
+  "description": "hubot script to remember quotes and retreive them later",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/b3nj4m/hubot-quote"
+  },
+  "keywords": [
+    "hubot"
+  ],
+  "author": "Ben Robbins <ben.robbins@gmail.com> (https://b3nj4m.com/)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/b3nj4m/hubot-quote/issues"
+  }
+}
