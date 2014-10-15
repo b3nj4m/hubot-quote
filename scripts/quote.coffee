@@ -59,8 +59,14 @@ module.exports = (robot) ->
   retrieve = robotRetrieve.bind(this, robot)
 
   robot.brain.setAutoSave(true)
-  store('quoteMessageCache', {})
-  store('quoteMessageStore', {})
+
+  messageCache = retrieve('quoteMessageCache')
+  if not messageCache
+    store('quoteMessageCache', {})
+
+  messageStore = retrieve('quoteMessageStore')
+  if not messageStore
+    store('quoteMessageStore', {})
 
   hubotMessageRegex = new RegExp('^[@]?' + robot.name + '[:,]?\\s', 'i')
 
