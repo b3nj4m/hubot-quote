@@ -1,6 +1,6 @@
 {
   "name": "hubot-quote",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "hubot script to remember quotes and retreive them later",
   "main": "index.js",
   "scripts": {
