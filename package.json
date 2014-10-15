@@ -17,5 +17,9 @@
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/b3nj4m/hubot-quote/issues"
+  },
+  "dependencies": {
+    "underscore": "~1.7.0",
+    "natural": "~0.1.28"
   }
 }
