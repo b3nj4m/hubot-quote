@@ -1,13 +1,16 @@
 # Description:
 #   Remember messages and quote them back
 #
+# Dependencies:
+#   underscore
+#   natural
+#
 # Commands:
 #   hubot remember <user> <text> - remember most recent message from <user> containing <text>
 #   hubot quote <user> <text> - quote a random remembered message from <user> containing <text>
 #   hubot forget <user> <text> - forget most recent remembered message from <user> containing <text>
 #   hubot quotemash <text> - quote some random remembered messages containing <text>
 
-Util = require 'util'
 _ = require 'underscore'
 natural = require 'natural'
 
@@ -19,15 +22,40 @@ STORE_SIZE = 100
 uniqueStems = (text) ->
   return _.unique(stemmer.tokenizeAndStem(text))
 
+messageToString = (message) ->
+  return "#{message.user.name}: #{message.text}"
+
+serialize = (data) ->
+  try
+    string = JSON.stringify(data)
+  catch err
+    #emit error?
+
+  return string
+
+deserialize = (string) ->
+  try
+    data = JSON.parse(string)
+  catch err
+    #emit error?
+
+  return data
+
+robotStore = (robot, key, data) ->
+  return robot.brain.set(key, serialize(data))
+
+robotRetrieve = (robot, key) ->
+  return deserialize(robot.brain.get(key))
+
 module.exports = (robot) ->
+  store = robotStore.bind(this, robot)
+  retrieve = robotRetrieve.bind(this, robot)
+
   robot.brain.setAutoSave(true)
-  robot.brain.set('quoteMessageCache', {})
-  robot.brain.set('quoteMessageStore', {})
+  store('quoteMessageCache', {})
+  store('quoteMessageStore', {})
 
   hubotMessageRegex = new RegExp('^[@]?' + robot.name + '[:,]?\\s', 'i')
-
-  messageToString = (message) ->
-    return "#{message.user.name}: #{message.text}"
 
   robot.respond /remember (\w*) (.*)/i, (msg) ->
     username = msg.match[1]
@@ -35,8 +63,8 @@ module.exports = (robot) ->
 
     stems = uniqueStems(text)
 
-    messageCache = robot.brain.get('quoteMessageCache')
-    messageStore = robot.brain.get('quoteMessageStore')
+    messageCache = retrieve('quoteMessageCache')
+    messageStore = retrieve('quoteMessageStore')
 
     #TODO search for users in messageStore in case they've been removed? (name change implications?)
     users = robot.brain.usersForFuzzyName(username)
@@ -60,8 +88,8 @@ module.exports = (robot) ->
 
           messageCache[user.id].splice(messageIdx, 1)
 
-          robot.brain.set('quoteMessageStore', messageStore)
-          robot.brain.set('quoteMessageCache', messageCache)
+          store('quoteMessageStore', messageStore)
+          store('quoteMessageCache', messageCache)
 
           #TODO configurable responses
           msg.send("remembering " + messageToString(message))
@@ -77,7 +105,7 @@ module.exports = (robot) ->
     username = msg.match[1]
     text = msg.match[2]
 
-    messageStore = robot.brain.get('quoteMessageStore')
+    messageStore = retrieve('quoteMessageStore')
 
     users = robot.brain.usersForFuzzyName(username)
 
@@ -94,7 +122,7 @@ module.exports = (robot) ->
         
         if message
           messageStore[user.id].splice(messageIdx, 1)
-          robot.brain.set('quoteMessageStore', messageStore)
+          store('quoteMessageStore', messageStore)
           #TODO message object with toString
           msg.send("forgot " + messageToString(message))
 
@@ -111,7 +139,7 @@ module.exports = (robot) ->
 
     stems = uniqueStems(text)
 
-    messageStore = robot.brain.get('quoteMessageStore')
+    messageStore = retrieve('quoteMessageStore')
 
     users = robot.brain.usersForFuzzyName(username)
 
@@ -143,7 +171,7 @@ module.exports = (robot) ->
 
     stems = uniqueStems(text)
 
-    messageStore = robot.brain.get('quoteMessageStore')
+    messageStore = retrieve('quoteMessageStore')
 
     matches = _.flatten _.map messageStore, (messages) ->
       return _.filter messages, (msg) ->
@@ -163,7 +191,7 @@ module.exports = (robot) ->
     #TODO existing way to test this somewhere??
     if not hubotMessageRegex.test(msg.message.text)
       userId = msg.message.user.id
-      messageCache = robot.brain.get('quoteMessageCache')
+      messageCache = retrieve('quoteMessageCache')
 
       messageCache[userId] = messageCache[userId] or []
 
@@ -176,5 +204,5 @@ module.exports = (robot) ->
         user: msg.message.user
       })
 
-      robot.brain.set('quoteMessageCache', messageCache)
+      store('quoteMessageCache', messageCache)
 
