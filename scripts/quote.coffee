@@ -5,6 +5,7 @@
 #   hubot remember <user> <text> - remember a recent message from <user> containing <text>
 #   hubot quote <user> <text> - quote a remembered message from <user> containing <text>
 #   hubot forget <user> <text> - forget a remembered message from <user> containing <text>
+#   hubot quotemash <text> - quote some remembered messages containing <text>
 
 Util = require 'util'
 _ = require 'underscore'
@@ -17,6 +18,11 @@ module.exports = (robot) ->
   robot.brain.set('quoteMessageCache', {})
   robot.brain.set('quoteMessageStore', {})
 
+  hubotMessageRegex = new RegExp('^[@]?' + robot.name + '[:,]?\\s', 'i')
+
+  messageToString = (message) ->
+    return "#{message.user.name}: #{message.text}"
+
   robot.respond /remember (\w*) (.*)/i, (msg) ->
     username = msg.match[1]
     text = msg.match[2]
@@ -24,6 +30,7 @@ module.exports = (robot) ->
     messageCache = robot.brain.get('quoteMessageCache')
     messageStore = robot.brain.get('quoteMessageStore')
 
+    console.log(robot)
     #TODO search for users in messageStore in case they've been removed? (name change implications?)
     users = robot.brain.usersForFuzzyName(username)
 
@@ -48,7 +55,7 @@ module.exports = (robot) ->
           robot.brain.set('quoteMessageCache', messageCache)
 
           #TODO configurable responses
-          msg.send("remembering #{message.user.name}: #{message.text}")
+          msg.send("remembering " + messageToString(message))
 
         return message
 
@@ -80,7 +87,7 @@ module.exports = (robot) ->
           messageStore[user.id].splice(messageIdx, 1)
           robot.brain.set('quoteMessageStore', messageStore)
           #TODO message object with toString
-          msg.send("forgot #{message.user.name}: #{message.text}")
+          msg.send("forgot " + messageToString(message))
 
         return message
 
@@ -108,7 +115,7 @@ module.exports = (robot) ->
 
         if messages
           message = messages[_.random(messages.length - 1)]
-          msg.send("#{message.user.name}: #{message.text}")
+          msg.send(messageToString(message))
 
         return messages
 
@@ -117,17 +124,39 @@ module.exports = (robot) ->
     else if not messages
       msg.send("#{text} not found")
 
+  robot.respond /quotemash (.*)/i, (msg) ->
+    text = msg.match[1]
+    limit = 10
+
+    messageStore = robot.brain.get('quoteMessageStore')
+
+    matches = _.flatten _.map messageStore, (messages) ->
+      return _.filter messages, (msg) ->
+        return msg.text.indexOf(text) isnt -1
+
+    messages = []
+
+    if matches
+      while messages.length < limit and matches.length > 0
+        messages.push(matches.splice(_.random(matches.length - 1), 1)[0])
+
+      msg.send.apply(msg, _.map(messages, messageToString))
+    else
+      msg.send("#{text} not found")
+
   robot.hear /.*/, (msg) ->
-    userId = msg.message.user.id
-    messageCache = robot.brain.get('quoteMessageCache')
+    #TODO existing way to test this somewhere??
+    if not hubotMessageRegex.test(msg.message.text)
+      userId = msg.message.user.id
+      messageCache = robot.brain.get('quoteMessageCache')
 
-    messageCache[userId] = messageCache[userId] or []
+      messageCache[userId] = messageCache[userId] or []
 
-    if messageCache[userId].length is CACHE_SIZE
-      messageCache[userId].pop()
+      if messageCache[userId].length is CACHE_SIZE
+        messageCache[userId].pop()
 
-    #TODO configurable cache size
-    messageCache[userId].unshift({text: msg.message.text, user: msg.message.user})
+      #TODO configurable cache size
+      messageCache[userId].unshift({text: msg.message.text, user: msg.message.user})
 
-    robot.brain.set('quoteMessageCache', messageCache)
+      robot.brain.set('quoteMessageCache', messageCache)
 
