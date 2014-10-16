@@ -30,8 +30,8 @@ function uniqueStems(text) {
   return _.unique(stemmer.tokenizeAndStem(text));
 }
 
-var messageTmpl = _.template('<%- user.name %>: <%- text %>');
-var notFoundTmpl = _.template('"<%- text %>" not found');
+var messageTmpl = _.template('<%= user.name %>: <%= text %>');
+var notFoundTmpl = _.template('"<%= text %>" not found');
 
 function messageToString(message) {
   return messageTmpl(message);
@@ -250,19 +250,20 @@ module.exports = function(robot) {
       var userId = msg.message.user.id;
       var messageCache = retrieve('quoteMessageCache');
 
-      messageCache[userId] = messageCache[userId] || [];
+      if (messageCache) {
+        messageCache[userId] = messageCache[userId] || [];
 
-      if (messageCache[userId].length === CACHE_SIZE) {
-        messageCache[userId].pop();
+        if (messageCache[userId].length === CACHE_SIZE) {
+          messageCache[userId].pop();
+        }
+
+        messageCache[userId].unshift({
+          text: msg.message.text,
+          user: msg.message.user
+        });
+
+        store('quoteMessageCache', messageCache);
       }
-
-      //TODO configurable cache size
-      messageCache[userId].unshift({
-        text: msg.message.text,
-        user: msg.message.user
-      });
-
-      store('quoteMessageCache', messageCache);
     }
   });
 };
