@@ -6,8 +6,8 @@
 //   "natural": "~0.1.28"
 //
 // Configuration:
-//   HUBOT_QUOTE_CACHE_SIZE=N - cache the last N messages for each user (default 25)
-//   HUBOT_QUOTE_STORE_SIZE=N - remember at most N messages for each user (default 100)
+//   HUBOT_QUOTE_CACHE_SIZE=N - Cache the last N messages for each user for potential remembrance (default 25).
+//   HUBOT_QUOTE_STORE_SIZE=N - Remember at most N messages for each user (default 100).
 //
 // Commands:
 //   hubot remember <user> <text> - remember most recent message from <user> containing <text>
