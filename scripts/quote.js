@@ -41,6 +41,10 @@ function notFoundMessage(text) {
   return notFoundTmpl({text: text});
 }
 
+function emptyStoreMessage() {
+  return "I don't remember any quotes...";
+}
+
 function serialize(data) {
   try {
     string = JSON.stringify(data);
@@ -127,20 +131,18 @@ function findFirstStemMatch(messageTable, text, users) {
   return null;
 }
 
-module.exports = function(robot) {
+function start(robot) {
   var store = robotStore.bind(this, robot);
   var retrieve = robotRetrieve.bind(this, robot);
 
   robot.brain.setAutoSave(true);
 
   var messageCache = retrieve('quoteMessageCache');
-  console.log('initial messageCache', messageCache);
   if (!messageCache) {
     store('quoteMessageCache', {});
   }
 
   var messageStore = retrieve('quoteMessageStore');
-  console.log('initial messageStore', messageStore);
   if (!messageStore) {
     store('quoteMessageStore', {});
   }
@@ -219,6 +221,9 @@ module.exports = function(robot) {
     else if (users.length === 0) {
       msg.send(notFoundMessage(username));
     }
+    else if (!text) {
+      msg.send(emptyStoreMessage());
+    }
     else {
       msg.send(notFoundMessage(text));
     }
@@ -241,6 +246,9 @@ module.exports = function(robot) {
 
       msg.send.apply(msg, _.map(messages, messageToString));
     }
+    else if (!text) {
+      msg.send(emptyStoreMessage());
+    }
     else {
       msg.send(notFoundMessage(text));
     }
@@ -252,20 +260,31 @@ module.exports = function(robot) {
       var userId = msg.message.user.id;
       var messageCache = retrieve('quoteMessageCache');
 
-      if (messageCache) {
-        messageCache[userId] = messageCache[userId] || [];
+      messageCache[userId] = messageCache[userId] || [];
 
-        if (messageCache[userId].length === CACHE_SIZE) {
-          messageCache[userId].pop();
-        }
-
-        messageCache[userId].unshift({
-          text: msg.message.text,
-          user: msg.message.user
-        });
-
-        store('quoteMessageCache', messageCache);
+      if (messageCache[userId].length === CACHE_SIZE) {
+        messageCache[userId].pop();
       }
+
+      messageCache[userId].unshift({
+        text: msg.message.text,
+        user: msg.message.user
+      });
+
+      store('quoteMessageCache', messageCache);
     }
   });
+}
+
+module.exports = function(robot) {
+  var loaded = function() {
+    start(robot);
+  };
+
+  if (_.isEmpty(robot.brain.data)) {
+    robot.brain.once('loaded', loaded);
+  }
+  else {
+    loaded();
+  }
 };
