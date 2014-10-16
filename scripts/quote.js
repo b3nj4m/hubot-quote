@@ -281,7 +281,7 @@ module.exports = function(robot) {
     start(robot);
   };
 
-  if (_.isEmpty(robot.brain.data)) {
+  if (_.isEmpty(robot.brain.data) || _.isEmpty(robot.brain.data._private)) {
     robot.brain.once('loaded', loaded);
   }
   else {
