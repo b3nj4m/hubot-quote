@@ -134,11 +134,13 @@ module.exports = function(robot) {
   robot.brain.setAutoSave(true);
 
   var messageCache = retrieve('quoteMessageCache');
+  console.log('initial messageCache', messageCache);
   if (!messageCache) {
     store('quoteMessageCache', {});
   }
 
   var messageStore = retrieve('quoteMessageStore');
+  console.log('initial messageStore', messageStore);
   if (!messageStore) {
     store('quoteMessageStore', {});
   }
