@@ -30,4 +30,4 @@ It currently uses [natural](https://github.com/NaturalNode/natural)'s `PorterSte
 
 - hubot quote \<user\> [\<text\>] - quote a random remembered message from \<user\> containing \<text\>
 
-- hubot quotemash [\<text\>] - quote some random remembered messages containing \<text\>
+- hubot quotemash [\<user\>] [\<text\>] - quote some random remembered messages that are from \<user\> and/or contain \<text\>
