@@ -13,7 +13,7 @@
 //   hubot remember <user> <text> - remember most recent message from <user> containing <text>
 //   hubot forget <user> <text> - forget most recent remembered message from <user> containing <text>
 //   hubot quote <user> [<text>] - quote a random remembered message from <user> containing <text>
-//   hubot quotemash [<text>] - quote some random remembered messages containing <text>
+//   hubot quotemash [<user>] [<text>] - quote some random remembered messages that are from <user> and/or contain <text>
 //
 // Author:
 //   b3nj4m
@@ -229,13 +229,25 @@ function start(robot) {
     }
   });
 
-  robot.respond(/quotemash( (.*))?/i, function(msg) {
-    var text = msg.match[2] || '';
+  robot.respond(/quotemash( (\w*))?( (.*))?/i, function(msg) {
+    var username = msg.match[2] || '';
+    var text = msg.match[4] || '';
     var limit = 10;
+    var users = null;
 
     var messageStore = retrieve('quoteMessageStore');
 
-    var matches = findAllStemMatches(messageStore, text);
+    if (username) {
+      users = robot.brain.usersForFuzzyName(username);
+
+      if (users.length === 0) {
+        //username is optional, so include it in `text` if we don't find any users
+        text = username + ' ' + text;
+        users = null;
+      }
+    }
+
+    var matches = findAllStemMatches(messageStore, text, users);
 
     var messages = [];
 
