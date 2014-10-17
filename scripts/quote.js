@@ -31,14 +31,33 @@ function uniqueStems(text) {
 }
 
 var messageTmpl = _.template('<%= user.name %>: <%= text %>');
-var notFoundTmpl = _.template('"<%= text %>" not found');
+
+var userNotFoundTmpls = [
+  "I don't know any <%= username %>",
+  "<%= username %> is lame."
+];
+userNotFoundTmpls = _.map(userNotFoundTmpls, _.template);
+
+var notFoundTmpls = [
+  "I don't know anything about <%= text %>.",
+  "Wat."
+];
+notFoundTmpls = _.map(notFoundTmpls, _.template);
+
+function randomItem(list) {
+  return list[_.random(list.length - 1)];
+}
 
 function messageToString(message) {
   return messageTmpl(message);
 }
 
+function userNotFoundMessage(username) {
+  return randomItem(userNotFoundTmpls)({username: username});
+}
+
 function notFoundMessage(text) {
-  return notFoundTmpl({text: text});
+  return randomItem(notFoundTmpls)({text: text});
 }
 
 function emptyStoreMessage() {
@@ -174,7 +193,7 @@ function start(robot) {
       msg.send("remembering " + messageToString(match.message));
     }
     else if (users.length === 0) {
-      msg.send(notFoundMessage(username));
+      msg.send(userNotFoundMessage(username));
     }
     else {
       msg.send(notFoundMessage(text));
@@ -197,7 +216,7 @@ function start(robot) {
       msg.send("forgot " + messageToString(match.message));
     }
     else if (users.length === 0) {
-      msg.send(notFoundMessage(username));
+      msg.send(userNotFoundMessage(username));
     }
     else {
       msg.send(notFoundMessage(text));
@@ -215,11 +234,11 @@ function start(robot) {
     var matches = findAllStemMatches(messageStore, text, users);
 
     if (matches && matches.length > 0) {
-      message = matches[_.random(matches.length - 1)];
+      message = randomItem(matches);
       msg.send(messageToString(message));
     }
     else if (users.length === 0) {
-      msg.send(notFoundMessage(username));
+      msg.send(userNotFoundMessage(username));
     }
     else if (!text) {
       msg.send(emptyStoreMessage());
@@ -242,7 +261,7 @@ function start(robot) {
 
       if (users.length === 0) {
         //username is optional, so include it in `text` if we don't find any users
-        text = username + ' ' + text;
+        text = username + (text ? ' ' + text : '');
         users = null;
       }
     }
