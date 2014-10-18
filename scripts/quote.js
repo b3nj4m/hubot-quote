@@ -14,6 +14,7 @@
 //   hubot forget <user> <text> - forget most recent remembered message from <user> containing <text>
 //   hubot quote <user> [<text>] - quote a random remembered message from <user> containing <text>
 //   hubot quotemash [<user>] [<text>] - quote some random remembered messages that are from <user> and/or contain <text>
+//   hubot <text>|<user>mash - quote some random remembered messages that from <user> or contain <text>
 //
 // Author:
 //   b3nj4m
@@ -248,9 +249,9 @@ function start(robot) {
     }
   });
 
-  robot.respond(/quotemash( (\w*))?( (.*))?/i, function(msg) {
-    var username = msg.match[2] || '';
-    var text = msg.match[4] || '';
+  robot.respond(/(quotemash( (\w*))?( (.*))?)|(((\w*))mash)/i, function(msg) {
+    var username = msg.match[3] || msg.match[8] || '';
+    var text = msg.match[5] || '';
     var limit = 10;
     var users = null;
 
