@@ -18,19 +18,60 @@ It currently uses [natural](https://github.com/NaturalNode/natural)'s `PorterSte
 
 ### Configuration:
 
-- `HUBOT_QUOTE_CACHE_SIZE=N` - Cache the last `N` messages for each user for potential remembrance (default 25).
+#### Cache size
 
-- `HUBOT_QUOTE_STORE_SIZE=N` - Remember at most `N` messages for each user (default 100).
+Cache the last `N` messages for each user for potential remembrance (default 25).
+
+```
+HUBOT_QUOTE_CACHE_SIZE=N
+```
+
+#### Store size
+
+Remember at most `N` messages for each user (default 100).
+
+```
+HUBOT_QUOTE_STORE_SIZE=N
+```
 
 ### Commands:
 
-- hubot remember \<user\> \<text\> - remember most recent message from \<user\> containing \<text\>
+#### Remember
 
-- hubot forget \<user\> \<text\> - forget most recent remembered message from <user> containing \<text\>
+Remember most recent message from `<user>` containing `<text>`.
 
-- hubot quote \<user\> [\<text\>] - quote a random remembered message from \<user\> containing \<text\>
+```
+hubot remember <user> <text>
+```
 
-- hubot quotemash [\<user\>] [\<text\>] - quote some random remembered messages that are from \<user\> and/or contain \<text\>
+#### Forget
 
-- hubot \<text\>|\<user\>mash - quote some random remembered messages that from \<user\> or contain \<text\>
+Forget most recent remembered message from `<user>` containing `<text>`.
 
+```
+hubot forget <user> <text>
+```
+
+#### Quote
+
+Quote a random remembered message from `<user>` containing `<text>`.
+
+```
+hubot quote <user> [<text>]
+```
+
+#### Quotemash
+
+Quote some random remembered messages that are from `<user>` and/or contain `<text>`.
+
+```
+hubot quotemash [<user>] [<text>]
+```
+
+#### Quotemash (alternate form)
+
+Quote some random remembered messages that are from `<user>` or contain `<text>`.
+
+```
+hubot <text>|<user>mash
+```
