@@ -29,8 +29,8 @@
       <div id="main" role="main">
         <div class="download-bar">
         <div class="inner">
-          <a href="https://github.com/b3nj4m/hubot-quote/archive/0.4.0.tar.gz" class="download-button tar"><span>Download</span></a>
-          <a href="https://github.com/b3nj4m/hubot-quote/archive/0.4.0.zip" class="download-button zip"><span>Download</span></a>
+          <a href="https://github.com/b3nj4m/hubot-quote/tarball/master" class="download-button tar"><span>Download</span></a>
+          <a href="https://github.com/b3nj4m/hubot-quote/zipball/master" class="download-button zip"><span>Download</span></a>
           <a href="https://github.com/b3nj4m/hubot-quote" class="code">View Hubot-quote on GitHub</a>
         </div>
         <span class="blc"></span><span class="trc"></span>
@@ -58,20 +58,64 @@ Hubot: Alice: pizza is delicious!
 <h3>
 <a name="configuration" class="anchor" href="#configuration"><span class="octicon octicon-link"></span></a>Configuration:</h3>
 
-<ul>
-<li><p><code>HUBOT_QUOTE_CACHE_SIZE=N</code> - Cache the last <code>N</code> messages for each user for potential remembrance (default 25).</p></li>
-<li><p><code>HUBOT_QUOTE_STORE_SIZE=N</code> - Remember at most <code>N</code> messages for each user (default 100).</p></li>
-</ul>
+<h4>
+<a name="cache-size" class="anchor" href="#cache-size"><span class="octicon octicon-link"></span></a>Cache size</h4>
+
+<p>Cache the last <code>N</code> messages for each user for potential remembrance (default 25).</p>
+
+<pre><code>HUBOT_QUOTE_CACHE_SIZE=N
+</code></pre>
+
+<h4>
+<a name="store-size" class="anchor" href="#store-size"><span class="octicon octicon-link"></span></a>Store size</h4>
+
+<p>Remember at most <code>N</code> messages for each user (default 100).</p>
+
+<pre><code>HUBOT_QUOTE_STORE_SIZE=N
+</code></pre>
 
 <h3>
 <a name="commands" class="anchor" href="#commands"><span class="octicon octicon-link"></span></a>Commands:</h3>
 
-<ul>
-<li><p>hubot remember &lt;user&gt; &lt;text&gt; - remember most recent message from &lt;user&gt; containing &lt;text&gt;</p></li>
-<li><p>hubot forget &lt;user&gt; &lt;text&gt; - forget most recent remembered message from  containing &lt;text&gt;</p></li>
-<li><p>hubot quote &lt;user&gt; [&lt;text&gt;] - quote a random remembered message from &lt;user&gt; containing &lt;text&gt;</p></li>
-<li><p>hubot quotemash [&lt;text&gt;] - quote some random remembered messages containing &lt;text&gt;</p></li>
-</ul>
+<h4>
+<a name="remember" class="anchor" href="#remember"><span class="octicon octicon-link"></span></a>Remember</h4>
+
+<p>Remember most recent message from <code>&lt;user&gt;</code> containing <code>&lt;text&gt;</code>.</p>
+
+<pre><code>hubot remember &lt;user&gt; &lt;text&gt;
+</code></pre>
+
+<h4>
+<a name="forget" class="anchor" href="#forget"><span class="octicon octicon-link"></span></a>Forget</h4>
+
+<p>Forget most recent remembered message from <code>&lt;user&gt;</code> containing <code>&lt;text&gt;</code>.</p>
+
+<pre><code>hubot forget &lt;user&gt; &lt;text&gt;
+</code></pre>
+
+<h4>
+<a name="quote" class="anchor" href="#quote"><span class="octicon octicon-link"></span></a>Quote</h4>
+
+<p>Quote a random remembered message from <code>&lt;user&gt;</code> containing <code>&lt;text&gt;</code>.</p>
+
+<pre><code>hubot quote &lt;user&gt; [&lt;text&gt;]
+</code></pre>
+
+<h4>
+<a name="quotemash" class="anchor" href="#quotemash"><span class="octicon octicon-link"></span></a>Quotemash</h4>
+
+<p>Quote some random remembered messages that are from <code>&lt;user&gt;</code> and/or contain <code>&lt;text&gt;</code>.</p>
+
+<pre><code>hubot quotemash [&lt;user&gt;] [&lt;text&gt;]
+</code></pre>
+
+<h4>
+<a name="quotemash-alternate-form" class="anchor" href="#quotemash-alternate-form"><span class="octicon octicon-link"></span></a>Quotemash (alternate form)</h4>
+
+<p>Quote some random remembered messages that are from <code>&lt;user&gt;</code> or contain <code>&lt;text&gt;</code>.</p>
+
+<pre><code>hubot &lt;text&gt;|&lt;user&gt;mash
+</code></pre>
         </article>
       </div>
     </div>
