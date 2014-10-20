@@ -4,7 +4,7 @@
   "description": "hubot script to remember quotes and retreive them later",
   "main": "index.js",
   "scripts": {
-    "test": "npm test"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
