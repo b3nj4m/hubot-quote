@@ -167,7 +167,7 @@ function start(robot) {
     store('quoteMessageStore', {});
   }
 
-  var hubotMessageRegex = new RegExp('^[@]?' + robot.name + '[:,]?\\s', 'i');
+  var hubotMessageRegex = new RegExp('^[@]?(' + robot.name + ')' + (robot.alias ? '|(' + robot.alias + ')' : '') + '[:,]?\\s', 'i');
 
   robot.respond(/remember (\w*) (.*)/i, function(msg) {
     var username = msg.match[1];
