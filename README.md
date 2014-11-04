@@ -34,6 +34,14 @@ Remember at most `N` messages for each user (default 100).
 HUBOT_QUOTE_STORE_SIZE=N
 ```
 
+#### Initialization timeout
+
+Wait for N milliseconds for hubot to initialize and load brain data from redis. (default 10000)
+
+```
+HUBOT_QUOTE_INIT_TIMEOUT=N
+```
+
 ### Commands:
 
 #### Remember

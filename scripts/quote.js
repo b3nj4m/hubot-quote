@@ -8,6 +8,7 @@
 // Configuration:
 //   HUBOT_QUOTE_CACHE_SIZE=N - Cache the last N messages for each user for potential remembrance (default 25).
 //   HUBOT_QUOTE_STORE_SIZE=N - Remember at most N messages for each user (default 100).
+//   HUBOT_QUOTE_INIT_TIMEOUT=N - wait for N milliseconds for brain data to load from redis. (default 10000)
 //
 // Commands:
 //   hubot remember <user> <text> - remember most recent message from <user> containing <text>
@@ -26,6 +27,7 @@ var stemmer = natural.PorterStemmer;
 
 var CACHE_SIZE = process.env.HUBOT_QUOTE_CACHE_SIZE ? parseInt(process.env.HUBOT_QUOTE_CACHE_SIZE) : 25;
 var STORE_SIZE = process.env.HUBOT_QUOTE_STORE_SIZE ? parseInt(process.env.HUBOT_QUOTE_STORE_SIZE) : 100;
+var INIT_TIMEOUT = process.env.HUBOT_QUOTE_INIT_TIMEOUT ? parseInt(process.env.HUBOT_QUOTE_INIT_TIMEOUT) : 10000;
 
 function uniqueStems(text) {
   return _.unique(stemmer.tokenizeAndStem(text));
@@ -309,12 +311,14 @@ function start(robot) {
 }
 
 module.exports = function(robot) {
-  var loaded = function() {
+  var loaded = _.once(function() {
+    console.log('starting hubot-quote...');
     start(robot);
-  };
+  });
 
   if (_.isEmpty(robot.brain.data) || _.isEmpty(robot.brain.data._private)) {
     robot.brain.once('loaded', loaded);
+    setTimeout(loaded, INIT_TIMEOUT);
   }
   else {
     loaded();
