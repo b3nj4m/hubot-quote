@@ -14,7 +14,7 @@ Hubot: Alice: pizza is delicious!
 
 ### Matching
 
-It currently uses [natural](https://github.com/NaturalNode/natural)'s `PorterStemmer` to match words regardless of conjugation, tense, etc. This is almost certainly going to change as I experiment with it more.
+It currently matches first with [natural](https://github.com/NaturalNode/natural)'s `PorterStemmer` to match words regardless of conjugation, tense, etc. It then looks for substring matches as well.
 
 ### Configuration:
 
