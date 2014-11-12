@@ -13,7 +13,7 @@
 // Commands:
 //   hubot remember <user> <text> - remember most recent message from <user> containing <text>
 //   hubot forget <user> <text> - forget most recent remembered message from <user> containing <text>
-//   hubot quote <user> [<text>] - quote a random remembered message from <user> containing <text>
+//   hubot quote [<user>] [<text>] - quote a random remembered message that is from <user> and/or contains <text>
 //   hubot quotemash [<user>] [<text>] - quote some random remembered messages that are from <user> and/or contain <text>
 //   hubot <text>|<user>mash - quote some random remembered messages that from <user> or contain <text>
 //
@@ -234,13 +234,22 @@ function start(robot) {
     }
   });
 
-  robot.respond(/quote ([^\s]*)( (.*))?/i, function(msg) {
-    var username = msg.match[1];
-    var text = msg.match[3] || '';
+  robot.respond(/quote( ([^\s]*))?( (.*))?/i, function(msg) {
+    var username = msg.match[2];
+    var text = msg.match[4] || '';
+    var users;
 
     var messageStore = retrieve('quoteMessageStore');
 
-    var users = robot.brain.usersForFuzzyName(username);
+    if (username) {
+      users = robot.brain.usersForFuzzyName(username);
+
+      if (users.length === 0) {
+        //username is optional, so include it in `text` if we don't find any users
+        text = username + (text ? ' ' + text : '');
+        users = null;
+      }
+    }
 
     var matches = findAllStemMatches(messageStore, text, users);
 

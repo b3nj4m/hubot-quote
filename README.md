@@ -62,10 +62,10 @@ hubot forget <user> <text>
 
 #### Quote
 
-Quote a random remembered message from `<user>` containing `<text>`.
+Quote a random remembered message that is from `<user>` and/or contains `<text>`.
 
 ```
-hubot quote <user> [<text>]
+hubot quote [<user>] [<text>]
 ```
 
 #### Quotemash
