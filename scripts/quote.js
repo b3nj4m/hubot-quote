@@ -97,11 +97,19 @@ function robotRetrieve(robot, key) {
   return deserialize(robot.brain.get(key));
 }
 
-function stemMatches(searchStems, msg) {
+function stemMatches(searchText, searchStems, msg) {
   //cache stems on message
   msg.stems = msg.stems || uniqueStems(msg.text);
   //require all stems to be present
-  return _.intersection(searchStems, msg.stems).length === searchStems.length;
+  return searchText === '' || (searchStems.length > 0 && _.intersection(searchStems, msg.stems).length === searchStems.length);
+}
+
+function textMatches(searchText, msg) {
+  return searchText === '' || msg.text.indexOf(searchText) > -1;
+}
+
+function matches(searchStems, searchText, msg) {
+  return stemMatches(searchText, searchStems, msg) || textMatches(searchText, msg);
 }
 
 function findAllStemMatches(messageTable, text, users) {
@@ -113,7 +121,7 @@ function findAllStemMatches(messageTable, text, users) {
       return [];
     }
     else {
-      return _.filter(messageTable[userId], stemMatches.bind(this, stems));
+      return _.filter(messageTable[userId], matches.bind(this, stems, text));
     }
   }));
 }
@@ -135,7 +143,7 @@ function findFirstStemMatch(messageTable, text, users) {
     else {
       message = _.find(messageTable[userId], function(msg, idx) {
         messageIdx = idx;
-        return stemMatches(stems, msg);
+        return matches(stems, text, msg);
       });
 
       return !!message;
@@ -171,7 +179,7 @@ function start(robot) {
 
   var hubotMessageRegex = new RegExp('^[@]?(' + robot.name + ')' + (robot.alias ? '|(' + robot.alias + ')' : '') + '[:,]?\\s', 'i');
 
-  robot.respond(/remember (\w*) (.*)/i, function(msg) {
+  robot.respond(/remember ([^\s]*) (.*)/i, function(msg) {
     var username = msg.match[1];
     var text = msg.match[2];
 
@@ -203,7 +211,7 @@ function start(robot) {
     }
   });
 
-  robot.respond(/forget (\w*) (.*)/i, function(msg) {
+  robot.respond(/forget ([^\s]*) (.*)/i, function(msg) {
     var username = msg.match[1];
     var text = msg.match[2];
 
@@ -226,7 +234,7 @@ function start(robot) {
     }
   });
 
-  robot.respond(/quote (\w*)( (.*))?/i, function(msg) {
+  robot.respond(/quote ([^\s]*)( (.*))?/i, function(msg) {
     var username = msg.match[1];
     var text = msg.match[3] || '';
 
@@ -251,7 +259,7 @@ function start(robot) {
     }
   });
 
-  robot.respond(/(quotemash( (\w*))?( (.*))?)|(((\w*))mash)/i, function(msg) {
+  robot.respond(/(quotemash( ([^\s]*))?( (.*))?)|((([^\s]*))mash)/i, function(msg) {
     var username = msg.match[3] || msg.match[8] || '';
     var text = msg.match[5] || '';
     var limit = 10;
