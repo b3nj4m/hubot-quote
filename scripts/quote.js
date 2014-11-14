@@ -105,7 +105,7 @@ function stemMatches(searchText, searchStems, msg) {
 }
 
 function textMatches(searchText, msg) {
-  return searchText === '' || msg.text.indexOf(searchText) > -1;
+  return searchText === '' || msg.text.toLowerCase().indexOf(searchText.toLowerCase()) > -1;
 }
 
 function matches(searchStems, searchText, msg) {
