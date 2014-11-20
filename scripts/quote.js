@@ -245,7 +245,7 @@ function start(robot) {
     }
   });
 
-  robot.respond(/quote( ([^\s]*))?( (.*))?/i, function(msg) {
+  robot.respond(/quote($| )([^\s]*)?( (.*))?/i, function(msg) {
     var username = msg.match[2];
     var text = msg.match[4] || '';
     var users;
