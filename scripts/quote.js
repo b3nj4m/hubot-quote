@@ -55,7 +55,7 @@ function randomItem(list) {
 function randomItems(list, limit) {
   var messages = new Array(Math.min(list.length, limit));
 
-  while (var i = 0; i < messages.length; i++) {
+  for (var i = 0; i < messages.length; i++) {
     messages[i] = list.splice(_.random(list.length - 1), 1)[0];
   }
 
