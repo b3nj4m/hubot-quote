@@ -51,6 +51,17 @@ function randomItem(list) {
   return list[_.random(list.length - 1)];
 }
 
+//get random subset of items (mutates original list)
+function randomItems(list, limit) {
+  var messages = new Array(Math.min(list.length, limit));
+
+  while (var i = 0; i < messages.length; i++) {
+    messages[i] = list.splice(_.random(list.length - 1), 1)[0];
+  }
+
+  return messages;
+}
+
 function messageToString(message) {
   return messageTmpl(message);
 }
@@ -101,15 +112,15 @@ function stemMatches(searchText, searchStems, msg) {
   //cache stems on message
   msg.stems = msg.stems || uniqueStems(msg.text);
   //require all stems to be present
-  return searchText === '' || (searchStems.length > 0 && _.intersection(searchStems, msg.stems).length === searchStems.length);
+  return searchStems.length > 0 && _.intersection(searchStems, msg.stems).length === searchStems.length;
 }
 
 function textMatches(searchText, msg) {
-  return searchText === '' || msg.text.toLowerCase().indexOf(searchText.toLowerCase()) > -1;
+  return msg.text.toLowerCase().indexOf(searchText.toLowerCase()) > -1;
 }
 
 function matches(searchStems, searchText, msg) {
-  return stemMatches(searchText, searchStems, msg) || textMatches(searchText, msg);
+  return searchText === '' || stemMatches(searchText, searchStems, msg) || textMatches(searchText, msg);
 }
 
 function findAllStemMatches(messageTable, text, users) {
@@ -288,14 +299,8 @@ function start(robot) {
 
     var matches = findAllStemMatches(messageStore, text, users);
 
-    var messages = [];
-
     if (matches && matches.length > 0) {
-      while (messages.length < limit && matches.length > 0) {
-        messages.push(matches.splice(_.random(matches.length - 1), 1)[0]);
-      }
-
-      msg.send.apply(msg, _.map(messages, messageToString));
+      msg.send.apply(msg, _.map(randomItems(list, limit), messageToString));
     }
     else if (!text) {
       msg.send(emptyStoreMessage());
