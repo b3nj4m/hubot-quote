@@ -300,7 +300,7 @@ function start(robot) {
     var matches = findAllStemMatches(messageStore, text, users);
 
     if (matches && matches.length > 0) {
-      msg.send.apply(msg, _.map(randomItems(list, limit), messageToString));
+      msg.send.apply(msg, _.map(randomItems(matches, limit), messageToString));
     }
     else if (!text) {
       msg.send(emptyStoreMessage());
