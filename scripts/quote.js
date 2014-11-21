@@ -2,8 +2,9 @@
 //   Remember messages and quote them back
 //
 // Dependencies:
-//   "underscore": "~1.7.0"
-//   "natural": "~0.1.28"
+//   underscore: ~1.7.0
+//   natural: ~0.1.28
+//   msgpack: ~0.2.4
 //
 // Configuration:
 //   HUBOT_QUOTE_CACHE_SIZE=N - Cache the last N messages for each user for potential remembrance (default 25).
@@ -22,6 +23,7 @@
 
 var _ = require('underscore');
 var natural = require('natural');
+var msgpack = require('msgpack');
 
 var stemmer = natural.PorterStemmer;
 
@@ -79,8 +81,10 @@ function emptyStoreMessage() {
 }
 
 function serialize(data) {
+  var string;
+
   try {
-    string = JSON.stringify(data);
+    string = msgpack.pack(data);
   }
   catch (err) {
     //emit error?
@@ -90,11 +94,24 @@ function serialize(data) {
 }
 
 function deserialize(string) {
+  var data;
+
+  //legacy (2.x and older) data was stored as JSON
   try {
     data = JSON.parse(string);
   }
   catch (err) {
     //emit error?
+  }
+
+  //new data is stored as msgpack
+  if (!data) {
+    try {
+      data = msgpack.unpack(new Buffer(string));
+    }
+    catch(err) {
+      //emit error?
+    }
   }
 
   return data;
