@@ -268,7 +268,7 @@ function start(robot) {
       message = randomItem(matches);
       msg.send(messageToString(message));
     }
-    else if (users.length === 0) {
+    else if (users && users.length === 0) {
       msg.send(userNotFoundMessage(username));
     }
     else if (!text) {
